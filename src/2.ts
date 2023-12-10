@@ -43,7 +43,7 @@ const parseGame = flow(S.split(": "), ([idLabel, rawRecord]) => ({
 }));
 
 export const add = <T extends number>(a: T, b: T) => a + b;
-const mul = <T extends number>(a: T, b: T) => a * b;
+export const mul = <T extends number>(a: T, b: T) => a * b;
 const max = <T extends number>(a: T, b: T) => Math.max(a, b);
 
 const parse = flow(S.split("\n"), RA.map(parseGame));
