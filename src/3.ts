@@ -3,9 +3,7 @@ import { flow, pipe } from "fp-ts/function";
 import * as RA from "fp-ts/lib/ReadonlyArray.js";
 import * as O from "fp-ts/Option";
 import { readFileSync } from "node:fs";
-import * as RR from "fp-ts/lib/ReadonlyRecord.js";
-import { tryParseNumber } from "./1.js";
-import { add, mul } from "./2.js";
+import { add, mul, parseNumber } from "./helpers.js";
 
 enum ComponentType {
   Number,
@@ -32,7 +30,7 @@ const parseRow = (rowNumber: number, row: string) => {
     const index = r.index ?? 0;
     return pipe(
       r[0],
-      tryParseNumber,
+      parseNumber,
       O.matchW(
         () => ({
           ...common,

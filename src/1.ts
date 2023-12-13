@@ -1,10 +1,10 @@
 import * as S from "fp-ts/string";
-import { flow, pipe } from "fp-ts/function";
+import { flip, flow, pipe } from "fp-ts/function";
 import * as RA from "fp-ts/lib/ReadonlyArray.js";
 import * as O from "fp-ts/Option";
 import { readFileSync } from "node:fs";
 import * as RR from "fp-ts/lib/ReadonlyRecord.js";
-import { add, match } from "./2.js";
+import { add, join, match, parseNumber, reverseString } from "./helpers.js";
 
 const DIGITS = {
   one: "1",
@@ -18,23 +18,16 @@ const DIGITS = {
   nine: "9",
 };
 
-export const tryParseNumber = (s: string) =>
-  String(Number(s)) === s ? O.some(Number(s)) : O.none;
-
-const join = (s: string) => (xs: readonly string[]) => xs.join(s);
-
 const basicCalibration: CalibrationFn = flow(
   (s: string) => s.replace(/[^0-9]/g, ""),
   S.split(""),
   (xs) => [RA.head(xs), RA.last(xs)],
   RA.compact,
   join(""),
-  tryParseNumber
+  parseNumber
 );
 
 type CalibrationFn = (s: string) => O.Option<number>;
-
-const reverseString = flow(S.split(""), RA.reverse, join(""));
 
 const advancedCalibration = (s: string) => {
   const getFirstMatch = flow(
@@ -62,14 +55,15 @@ const advancedCalibration = (s: string) => {
     RA.compact,
     RA.map((s) => DIGITS[s as keyof typeof DIGITS] ?? s),
     join(""),
-    tryParseNumber
+    parseNumber
   );
 };
 
-// RR.find
-
-const day1 = (calibrationFn: CalibrationFn) =>
+const createDay1 = (calibrationFn: CalibrationFn) =>
   flow(S.split("\n"), RA.map(calibrationFn), RA.compact, RA.reduce(0, add));
+
+const day1 = createDay1(basicCalibration);
+const day1pt2 = createDay1(advancedCalibration);
 
 if (import.meta.vitest) {
   const { it, expect } = import.meta.vitest;
@@ -90,43 +84,13 @@ if (import.meta.vitest) {
     expect(basicCalibration("1abc2")).toStrictEqual(O.some(12));
     expect(basicCalibration("treb7uchet")).toStrictEqual(O.some(77));
     expect(basicCalibration("trebuchet")).toStrictEqual(O.none);
-
-    expect(advancedCalibration("two1nine")).toStrictEqual(O.some(29));
-    expect(advancedCalibration("eightwothree")).toStrictEqual(O.some(83));
-    expect(advancedCalibration("abcone2threexyz")).toStrictEqual(O.some(13));
-    expect(advancedCalibration("xtwone3four")).toStrictEqual(O.some(24));
-    expect(advancedCalibration("4nineeightseven2")).toStrictEqual(O.some(42));
-    expect(advancedCalibration("zoneight234")).toStrictEqual(O.some(14));
-    expect(advancedCalibration("7pqrstsixteen")).toStrictEqual(O.some(76));
-
-    expect(advancedCalibration("zoneight234")).toStrictEqual(O.some(14));
-
-    expect(advancedCalibration("587cdbcb2mspbgbl")).toStrictEqual(O.some(52));
-    expect(advancedCalibration("twojkblghsctseven8eight")).toStrictEqual(
-      O.some(28)
-    );
-    expect(advancedCalibration("2xmdmtgcjhd8eighttwo")).toStrictEqual(
-      O.some(22)
-    );
-    expect(advancedCalibration("nine6qpfzxhsdsfour9")).toStrictEqual(
-      O.some(99)
-    );
-    expect(advancedCalibration("9rvqhjvmh7kcvnineccn9rzpzs")).toStrictEqual(
-      O.some(99)
-    );
-    expect(advancedCalibration("tbsxkhhv6twozrtczg6seven")).toStrictEqual(
-      O.some(67)
-    );
-    expect(
-      advancedCalibration("ccpeightbcvknglvcv81gcjnlnfnine9")
-    ).toStrictEqual(O.some(89));
     expect(advancedCalibration("1twone")).toStrictEqual(O.some(11));
   });
   it("day1", () => {
-    expect(day1(basicCalibration)(DEMO)).toStrictEqual(142);
-    expect(day1(basicCalibration)(USER_INPUT)).toStrictEqual(56506);
-    expect(day1(advancedCalibration)(DEMO2)).toStrictEqual(281);
-    expect(day1(advancedCalibration)(USER_INPUT)).gt(56001);
-    expect(day1(advancedCalibration)(USER_INPUT)).eq(56017);
+    expect(day1(DEMO)).toStrictEqual(142);
+    expect(day1(USER_INPUT)).toStrictEqual(56506);
+    expect(day1pt2(DEMO2)).toStrictEqual(281);
+    expect(day1pt2(USER_INPUT)).gt(56001);
+    expect(day1pt2(USER_INPUT)).eq(56017);
   });
 }

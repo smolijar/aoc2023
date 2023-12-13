@@ -3,11 +3,7 @@ import { flow, pipe } from "fp-ts/function";
 import * as RA from "fp-ts/lib/ReadonlyArray.js";
 import * as O from "fp-ts/Option";
 import { readFileSync } from "node:fs";
-import * as RR from "fp-ts/lib/ReadonlyRecord.js";
-import { tryParseNumber } from "./1.js";
-
-export const match = (regex: RegExp) => (s: string) =>
-  RA.fromArray(s.match(regex) ?? []);
+import { add, captureInt, max, mul } from "./helpers.js";
 
 const parseRound = (colors: readonly string[]) =>
   ["red", "green", "blue"].map((color) =>
@@ -31,8 +27,6 @@ const parseGameRecord = flow(
     ] as const
 );
 
-const captureInt = flow(match(/[0-9]+/), RA.head, O.chain(tryParseNumber));
-
 const parseGame = flow(S.split(": "), ([idLabel, rawRecord]) => ({
   id: pipe(
     idLabel,
@@ -41,10 +35,6 @@ const parseGame = flow(S.split(": "), ([idLabel, rawRecord]) => ({
   ),
   maxes: parseGameRecord(rawRecord),
 }));
-
-export const add = <T extends number>(a: T, b: T) => a + b;
-export const mul = <T extends number>(a: T, b: T) => a * b;
-const max = <T extends number>(a: T, b: T) => Math.max(a, b);
 
 const parse = flow(S.split("\n"), RA.map(parseGame));
 
